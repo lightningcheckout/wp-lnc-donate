@@ -7,100 +7,48 @@ Author: Your Name
 */
 
 // Register Settings
-function lightningcheckout_bitcoin_donate_register_settings()
+function lnc_btcdonate_register_settings()
 {
-    register_setting(
-        "lightningcheckout_bitcoin_donate_settings_group",
-        "lightningcheckout_bitcoin_donate_api_endpoint"
-    );
+    register_setting("lnc_btcdonate_settings_group", "lnc_btcdonate_api_endpoint");
+    register_setting("lnc_btcdonate_settings_group","lnc_btcdonate_api_key");
+    register_setting("lnc_btcdonate_settings_group","lnc_btcdonate_api_secret");
+    register_setting("lnc_btcdonate_settings_group","lnc_btcdonate_currency_options","lnc_btcdonate_sanitize_currency_options");
 
-    register_setting(
-        "lightningcheckout_bitcoin_donate_settings_group",
-        "lightningcheckout_bitcoin_donate_api_key"
-    );
+    add_settings_section("lnc_btcdonate_settings_section","API Settings","lnc_btcdonate_settings_section_callback","lnc_btcdonate_settings");
 
-    register_setting(
-        "lightningcheckout_bitcoin_donate_settings_group",
-        "lightningcheckout_bitcoin_donate_api_secret"
-    );
-
-    register_setting(
-        "lightningcheckout_bitcoin_donate_settings_group",
-        "lightningcheckout_bitcoin_donate_currency_options",
-        "lightningcheckout_bitcoin_donate_sanitize_currency_options"
-    );
-
-    add_settings_section(
-        "lightningcheckout_bitcoin_donate_settings_section",
-        "API Settings",
-        "lightningcheckout_bitcoin_donate_settings_section_callback",
-        "lightningcheckout_bitcoin_donate_settings"
-    );
-
-    add_settings_field(
-        "lightningcheckout_bitcoin_donate_api_endpoint",
-        "API Endpoint",
-        "lightningcheckout_bitcoin_donate_api_endpoint_callback",
-        "lightningcheckout_bitcoin_donate_settings",
-        "lightningcheckout_bitcoin_donate_settings_section"
-    );
-
-    add_settings_field(
-        "lightningcheckout_bitcoin_donate_api_key",
-        "API Key",
-        "lightningcheckout_bitcoin_donate_api_key_callback",
-        "lightningcheckout_bitcoin_donate_settings",
-        "lightningcheckout_bitcoin_donate_settings_section"
-    );
-
-    add_settings_field(
-        "lightningcheckout_bitcoin_donate_api_secret",
-        "Lightning Wallet",
-        "lightningcheckout_bitcoin_donate_api_secret_callback",
-        "lightningcheckout_bitcoin_donate_settings",
-        "lightningcheckout_bitcoin_donate_settings_section"
-    );
-
-    add_settings_field(
-        "lightningcheckout_bitcoin_donate_currency_options",
-        "Currency Options",
-        "lightningcheckout_bitcoin_donate_currency_options_callback",
-        "lightningcheckout_bitcoin_donate_settings",
-        "lightningcheckout_bitcoin_donate_settings_section"
-    );
+    add_settings_field("lnc_btcdonate_api_endpoint","API Endpoint","lnc_btcdonate_api_endpoint_callback","lnc_btcdonate_settings","lnc_btcdonate_settings_section");
+    add_settings_field("lnc_btcdonate_api_key","API Key","lnc_btcdonate_api_key_callback","lnc_btcdonate_settings","lnc_btcdonate_settings_section");
+    add_settings_field("lnc_btcdonate_api_secret","Lightning Wallet","lnc_btcdonate_api_secret_callback","lnc_btcdonate_settings","lnc_btcdonate_settings_section");
+    add_settings_field("lnc_btcdonate_currency_options","Currency Options","lnc_btcdonate_currency_options_callback","lnc_btcdonate_settings","lnc_btcdonate_settings_section");
 }
 
-function lightningcheckout_bitcoin_donate_settings_section_callback()
+function lnc_btcdonate_settings_section_callback()
 {
     echo "Enter your API settings and configure currency options below:";
 }
 
-function lightningcheckout_bitcoin_donate_api_endpoint_callback()
+function lnc_btcdonate_api_endpoint_callback()
 {
-    $endpoint = get_option("lightningcheckout_bitcoin_donate_api_endpoint");
-    echo "<input type='text' name='lightningcheckout_bitcoin_donate_api_endpoint' value='$endpoint' />";
+    $endpoint = get_option("lnc_btcdonate_api_endpoint");
+    echo "<input type='text' name='lnc_btcdonate_api_endpoint' value='$endpoint' />";
 }
 
-function lightningcheckout_bitcoin_donate_api_key_callback()
+function lnc_btcdonate_api_key_callback()
 {
-    $key = get_option("lightningcheckout_bitcoin_donate_api_key");
-    echo "<input type='text' name='lightningcheckout_bitcoin_donate_api_key' value='$key' />";
+    $key = get_option("lnc_btcdonate_api_key");
+    echo "<input type='text' name='lnc_btcdonate_api_key' value='$key' />";
 }
 
-function lightningcheckout_bitcoin_donate_api_secret_callback()
+function lnc_btcdonate_api_secret_callback()
 {
-    $secret = get_option("lightningcheckout_bitcoin_donate_api_secret");
-    echo "<input type='text' name='lightningcheckout_bitcoin_donate_api_secret' value='$secret' />";
+    $secret = get_option("lnc_btcdonate_api_secret");
+    echo "<input type='text' name='lnc_btcdonate_api_secret' value='$secret' />";
 }
 
-function lightningcheckout_bitcoin_donate_currency_options_callback()
+function lnc_btcdonate_currency_options_callback()
 {
-    $currency_options = get_option(
-        "lightningcheckout_bitcoin_donate_currency_options"
-    ); ?>
-    <input type="text" name="lightningcheckout_bitcoin_donate_currency_options" value="<?php echo esc_attr(
-        $currency_options
-    ); ?>" placeholder="Enter currency codes (comma-separated)" />
+    $currency_options = get_option("lnc_btcdonate_currency_options"); ?>
+    <input type="text" name="lnc_btcdonate_currency_options" value="<?php echo esc_attr($currency_options); ?>" placeholder="Enter currency codes (comma-separated)" />
     <?php
 }
 
@@ -139,28 +87,20 @@ function save_donation_message($donation_details) {
     wp_insert_post($post_data);
 }
 
-function lightningcheckout_bitcoin_donate_sanitize_currency_options($input)
+function lnc_btcdonate_sanitize_currency_options($input)
 {
     // Sanitize and ensure that only valid currency codes are saved
-    $valid_currencies = lightningcheckout_bitcoin_donate_get_currency_list();
+    $valid_currencies = lnc_btcdonate_get_currency_list();
 
-    // Convert the input to an array
+    // Convert the input to an array, Filter out invalid currencies, Convert back to a comma-separated string
     $input_array = explode(",", $input);
-
-    // Filter out invalid currencies
-    $sanitized_input = array_intersect(
-        $input_array,
-        array_keys($valid_currencies)
-    );
-
-    // Convert back to a comma-separated string
+    $sanitized_input = array_intersect($input_array, array_keys($valid_currencies));
     $sanitized_input_string = implode(",", $sanitized_input);
-
     return $sanitized_input_string;
 }
 
 // Function to define a basic set of currencies (replace with your desired list)
-function lightningcheckout_bitcoin_donate_get_currency_list()
+function lnc_btcdonate_get_currency_list()
 {
     return [
         "USD" => "US Dollar",
@@ -172,41 +112,35 @@ function lightningcheckout_bitcoin_donate_get_currency_list()
 }
 
 // Add Top-level Menu Page
-function lightningcheckout_bitcoin_donate_menu_page()
+function lnc_btcdonate_menu_page()
 {
-    add_menu_page("LN Checkout", "LN Checkout", "manage_options", "lightningcheckout_bitcoin_donate_main", "lightningcheckout_bitcoin_donate_render_main_page", "dashicons-lightning", 30);
-
-    // Add Submenu Page
-    add_submenu_page("lightningcheckout_bitcoin_donate_main", "BTC Donate", "BTC Donate", "manage_options", "lightningcheckout_bitcoin_donate_settings", "lightningcheckout_bitcoin_donate_render_settings_page");
+    add_menu_page("LN Checkout", "LN Checkout", "manage_options", "lnc_btcdonate_main", "lnc_btcdonate_render_main_page", "dashicons-lightning", 30);
+    add_submenu_page("lnc_btcdonate_main", "BTC Donate", "BTC Donate", "manage_options", "lnc_btcdonate_settings", "lnc_btcdonate_render_settings_page");
 }
 
-function lightningcheckout_bitcoin_donate_render_main_page()
+function lnc_btcdonate_render_main_page()
 {
     ?>
-    <div class="wrap">
-        <h1>Lightning Checkout</h1>
-    </div>
+    <div class="wrap"><h1>Lightning Checkout</h1></div>
     <?php
 }
 
-function lightningcheckout_bitcoin_donate_render_settings_page()
+function lnc_btcdonate_render_settings_page()
 {
     ?>
-    <div class="wrap">
-        <h1>Bitcoin Donate Settings</h1>
+    <div class="wrap"><h1>Bitcoin Donate Settings</h1>
         <form method="post" action="options.php">
             <?php
-            settings_fields("lightningcheckout_bitcoin_donate_settings_group");
-            do_settings_sections("lightningcheckout_bitcoin_donate_settings");
+            settings_fields("lnc_btcdonate_settings_group");
+            do_settings_sections("lnc_btcdonate_settings");
             submit_button("Save Settings");?>
         </form>
     </div>
     <?php
 }
 
-add_action("admin_menu", "lightningcheckout_bitcoin_donate_menu_page");
-add_action("admin_init", "lightningcheckout_bitcoin_donate_register_settings");
-
+add_action("admin_menu", "lnc_btcdonate_menu_page");
+add_action("admin_init", "lnc_btcdonate_register_settings");
 
 // Register the webhook endpoint
 function register_webhook_endpoint() {
@@ -215,7 +149,6 @@ function register_webhook_endpoint() {
         'callback' => 'handle_webhook',
     ));
 }
-
 add_action('rest_api_init', 'register_webhook_endpoint');
 
 // Handle the incoming webhook data
@@ -230,7 +163,7 @@ function handle_webhook($request) {
     //    'message' => $data['misc']['donation_message'],
     //);
 
-        save_donation_message($donation_details);
+    save_donation_message($donation_details);
 
     // Verify that the incoming request has the required data
     if (isset($data['title']) && isset($data['content'])) {
@@ -262,7 +195,7 @@ function handle_webhook($request) {
 
 
 // Add Form Shortcode
-function lightningcheckout_bitcoin_donate_shortcode()
+function lnc_btcdonate_shortcode()
 {
     ob_start();
 
@@ -278,9 +211,9 @@ function lightningcheckout_bitcoin_donate_shortcode()
         $selected_currency = sanitize_text_field($_POST["donor_currency"]);
 
         // Retrieve API settings from the admin
-        $api_endpoint = get_option("lightningcheckout_bitcoin_donate_api_endpoint");
-        $api_key = get_option("lightningcheckout_bitcoin_donate_api_key");
-        $api_lnwallet = get_option("lightningcheckout_bitcoin_donate_api_secret");
+        $api_endpoint = get_option("lnc_btcdonate_api_endpoint");
+        $api_key = get_option("lnc_btcdonate_api_key");
+        $api_lnwallet = get_option("lnc_btcdonate_api_secret");
 
         // get blog name
         $site_name = get_bloginfo('name');
@@ -374,7 +307,7 @@ function lightningcheckout_bitcoin_donate_shortcode()
     }
 
     // Retrieve selected currency options
-    $selected_currencies = get_option( "lightningcheckout_bitcoin_donate_currency_options");
+    $selected_currencies = get_option( "lnc_btcdonate_currency_options");
     $selected_currencies = explode(",", $selected_currencies);
     $selected_currencies = array_map("trim", $selected_currencies);
     // Your shortcode logic here
@@ -392,7 +325,7 @@ function lightningcheckout_bitcoin_donate_shortcode()
               <div class="form-group col-md-4">
                  <select id="donor-currency" class="form-control" name="donor_currency">
                     <?php foreach ($selected_currencies as $code): ?>
-                    <?php $name = lightningcheckout_bitcoin_donate_get_currency_list()[$code] ?? ""; ?>
+                    <?php $name = lnc_btcdonate_get_currency_list()[$code] ?? ""; ?>
                     <option value="<?php echo esc_attr($code); ?>"><?php echo esc_html($name); ?> (<?php echo esc_html($code); ?>)</option>
                     <?php endforeach; ?>
                  </select>
@@ -417,35 +350,35 @@ function lightningcheckout_bitcoin_donate_shortcode()
      *
      * @param string $form_content The default form content.
      */
-    $form_content = apply_filters("lightningcheckout_bitcoin_donate_output", $form_content);
+    $form_content = apply_filters("lnc_btcdonate_output", $form_content);
     error_log("Lightning Checkout Bitcoin Donate shortcode called.");
     return $form_content;
 }
 
 // Register the shortcode
-add_shortcode("lightningcheckout_bitcoin_donate", "lightningcheckout_bitcoin_donate_shortcode");
+add_shortcode("lightningcheckout_bitcoin_donate", "lnc_btcdonate_shortcode");
 
 // Enqueue Active Theme Styles
-function lightningcheckout_bitcoin_donate_theme_styles()
+function lnc_btcdonate_theme_styles()
 {
     // Enqueue the active theme's stylesheet
     wp_enqueue_style("lightningcheckout-bitcoin-donate-theme-styles", get_stylesheet_uri());
 }
 
-add_action( "wp_enqueue_scripts", "lightningcheckout_bitcoin_donate_theme_styles");
+add_action( "wp_enqueue_scripts", "lnc_btcdonate_theme_styles");
 
 // User-Provided Styles
-function lightningcheckout_bitcoin_donate_user_styles()
+function lnc_btcdonate_user_styles()
 {
     /**
      * Action hook for users to enqueue their own stylesheet for the custom payment form.
      */
-    do_action("lightningcheckout_bitcoin_donate_enqueue_styles");
+    do_action("lnc_btcdonate_enqueue_styles");
 }
 
-add_action("wp_head", "lightningcheckout_bitcoin_donate_user_styles");
+add_action("wp_head", "lnc_btcdonate_user_styles");
 
-function lightningcheckout_bitcoin_donate_enqueue_styles()
+function lnc_btcdonate_enqueue_styles()
 {
     // Enqueue Bootstrap stylesheet
     wp_enqueue_style("bootstrap", "https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css");
@@ -453,4 +386,4 @@ function lightningcheckout_bitcoin_donate_enqueue_styles()
     wp_enqueue_style( "lightningcheckout-style", plugins_url("lightningcheckout-donate-style.css", __FILE__));
 }
 
-add_action("wp_enqueue_scripts", "lightningcheckout_bitcoin_donate_enqueue_styles");
+add_action("wp_enqueue_scripts", "lnc_btcdonate_enqueue_styles");
