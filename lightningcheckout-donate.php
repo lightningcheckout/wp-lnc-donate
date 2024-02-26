@@ -223,6 +223,15 @@ function handle_webhook($request) {
     $data = $request->get_json_params();
     error_log(data);
 
+
+    //$donation_details = array(
+    //    'title' => $data['misc']['donation_title'],
+    //    'amount' => $data['amount'],
+    //    'message' => $data['misc']['donation_message'],
+    //);
+
+        save_donation_message($donation_details);
+
     // Verify that the incoming request has the required data
     if (isset($data['title']) && isset($data['content'])) {
         // Prepare post data
@@ -351,7 +360,7 @@ function lightningcheckout_bitcoin_donate_shortcode()
                         wp_redirect($api_endpoint.'/satspay/'.$charge_id);
 
                     }
-                    }
+                }
     }
 
 
@@ -361,18 +370,7 @@ function lightningcheckout_bitcoin_donate_shortcode()
 
     // If 'paid' is true, display a thank you message
     if ($is_paid) {
-
-        $donation_details = array(
-            'title' => 'John Doe',
-            'amount' => '$50',
-            'message' => 'Thank you for your support!',
-        );
-
-        save_donation_message($donation_details);
-
         return '<p>Thanks for your donation!</p>';
-
-
     }
 
     // Retrieve selected currency options
