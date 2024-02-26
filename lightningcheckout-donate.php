@@ -55,7 +55,7 @@ function lightningcheckout_bitcoin_donate_register_settings()
 
     add_settings_field(
         "lightningcheckout_bitcoin_donate_api_secret",
-        "API Secret",
+        "Lightning Wallet",
         "lightningcheckout_bitcoin_donate_api_secret_callback",
         "lightningcheckout_bitcoin_donate_settings",
         "lightningcheckout_bitcoin_donate_settings_section"
@@ -102,6 +102,41 @@ function lightningcheckout_bitcoin_donate_currency_options_callback()
         $currency_options
     ); ?>" placeholder="Enter currency codes (comma-separated)" />
     <?php
+}
+
+// Create a custom post type for donations
+function create_donation_post_type() {
+    register_post_type('donation', array(
+        'labels' => array(
+            'name' => 'Donations',
+            'singular_name' => 'Donation',
+        ),
+        'public' => true,
+        'has_archive' => false,
+        'publicly_queryable' => false,
+        'supports' => array('title'),
+    ));
+}
+
+// Add a noindex meta tag for the 'donation' custom post type
+function prevent_indexing_custom_post_type() {
+    // Check if it's a single post of the custom post type 'donation'
+    if (is_singular('donation')) {
+        echo '<meta name="robots" content="noindex" />';
+    }
+}
+
+add_action('init', 'create_donation_post_type');
+add_action('wp_head', 'prevent_indexing_custom_post_type');
+
+function save_donation_message($donation_details) {
+    $post_data = array(
+        'post_title' => $donation_details['title'] . ' ('.$donation_details['amount'].' sats)',
+        'post_content' => $donation_details['message'],
+        'post_type' => 'donation',
+        'post_status' => 'publish',
+    );
+    wp_insert_post($post_data);
 }
 
 function lightningcheckout_bitcoin_donate_sanitize_currency_options($input)
@@ -169,11 +204,53 @@ function lightningcheckout_bitcoin_donate_render_settings_page()
     <?php
 }
 
-// Rest of the code remains unchanged
-
 add_action("admin_menu", "lightningcheckout_bitcoin_donate_menu_page");
 add_action("admin_init", "lightningcheckout_bitcoin_donate_register_settings");
-// ...
+
+
+// Register the webhook endpoint
+function register_webhook_endpoint() {
+    register_rest_route('lightningcheckout-donate/v1', '/webhook/', array(
+        'methods'  => 'POST',
+        'callback' => 'handle_webhook',
+    ));
+}
+
+add_action('rest_api_init', 'register_webhook_endpoint');
+
+// Handle the incoming webhook data
+function handle_webhook($request) {
+    $data = $request->get_json_params();
+    error_log(data);
+
+    // Verify that the incoming request has the required data
+    if (isset($data['title']) && isset($data['content'])) {
+        // Prepare post data
+        $post_data = array(
+            'post_title'   => sanitize_text_field($data['title']),
+            'post_content' => wp_kses_post($data['content']),
+            'post_status'  => 'publish',
+            'post_type'    => 'donation',  // Change this to your custom post type
+        );
+
+        // Insert the post
+        $post_id = wp_insert_post($post_data);
+
+        if (!is_wp_error($post_id)) {
+            // Successfully created the post
+            return new WP_REST_Response(array('message' => 'Post created successfully.'), 200);
+        } else {
+            // Failed to create the post
+            return new WP_REST_Response(array('message' => 'Failed to create post.'), 500);
+        }
+    } else {
+        // Required data is missing
+        return new WP_REST_Response(array('message' => 'Missing required data.'), 400);
+    }
+}
+
+
+
 
 // Add Form Shortcode
 function lightningcheckout_bitcoin_donate_shortcode()
@@ -182,7 +259,9 @@ function lightningcheckout_bitcoin_donate_shortcode()
 
     // Handle form submission
     if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["submit"])) {
+
         error_log("================================================================");
+
         // Retrieve form data
         $donation_amount = sanitize_text_field($_POST["donation_amount"]);
         $donor_name = sanitize_text_field($_POST["donor_name"]);
@@ -192,39 +271,108 @@ function lightningcheckout_bitcoin_donate_shortcode()
         // Retrieve API settings from the admin
         $api_endpoint = get_option("lightningcheckout_bitcoin_donate_api_endpoint");
         $api_key = get_option("lightningcheckout_bitcoin_donate_api_key");
-        error_log('selected_currency: ' . $selected_currency);
+        $api_lnwallet = get_option("lightningcheckout_bitcoin_donate_api_secret");
+
+        // get blog name
+        $site_name = get_bloginfo('name');
+        $base_url = home_url();
+        $redirect_url = add_query_arg('', '', $base_url . $_SERVER['REQUEST_URI']).'?paid=true';
+
+
+        // Convert amount to sat if not sat
         if ($selected_currency == 'SAT') {
             $amount_sats = $donation_amount;
         } else {
-        // TODO ONLY CONVERT IF NOT SAT
-        // Prepare API data
-        $api_data = [
-            "from_" => $selected_currency,
-            "amount" => $donation_amount,
-            "to" => "sat",
-        ];
+                $conversion_api_data = [
+                    "from_" => $selected_currency,
+                    "amount" => $donation_amount,
+                    "to" => "sat",
+                ];
 
-        // Make API call
-        $api_response = wp_remote_post($api_endpoint . "/api/v1/conversion", [
-            "body" => json_encode($api_data),
-            "headers" => [
-                "Content-Type" => "application/json",
-            ],
-        ]);
+                // Make API call
+                $api_response = wp_remote_post($api_endpoint . "/api/v1/conversion", [
+                    "body" => json_encode($conversion_api_data),
+                    "headers" => [
+                        "Content-Type" => "application/json",
+                    ],
+                ]);
 
-        // Check if the API call was successful
-        if (is_wp_error($api_response)) {
-            error_log("API Error: " . $api_response->get_error_message());
+                // Check if the API call was successful
+                if (is_wp_error($api_response)) {
+                    error_log("API Error: " . $api_response->get_error_message());
+                } else {
+                    // API call was successful
+                    $api_body = wp_remote_retrieve_body($api_response);
+                    $decoded_response = json_decode($api_body);
+                    if ($decoded_response !== null) {
+                        $amount_sats = $decoded_response->sats;
+                        error_log($amount_sats);
+                    }
+                    }
+            }
+
+        if (strlen($donor_name) > 2) {
+            $donar_title = $donor_name.' ('.$amount_sats.' sats)';
         } else {
-            // API call was successful
-            $api_body = wp_remote_retrieve_body($api_response);
-            $decoded_response = json_decode($api_body);
-            if ($decoded_response !== null) {
-                $amount_sats = $decoded_response->sats;
-                error_log($amount_sats);
-            }
-            }
+            $donar_title = 'Anonymous ('.$amount_sats.' sats)';
         }
+
+        // Create payments
+        $charge_api_data = [
+                "lnbitswallet" => $api_lnwallet,
+                "description" => 'Donation '. $site_name,
+                "completelink" => $redirect_url,
+                "completelinktext" => "Thanks, go back to ". $site_name,
+                "webhook" => $base_url.'wp-json/lightningcheckout-donate/v1/webhook',
+                "time" => 1440,
+                "amount" => $amount_sats,
+                "extra" => '{"mempool_endpoint": "https://mempool.space", "network": "Mainnet", "misc": {"lnc_product": "BTCDONATE", "donate_title": "'.$donar_title.'", "donate_message": "'.$donor_comment.'"}}',
+            ];
+
+            // Make API call
+            $charge_api_response = wp_remote_post($api_endpoint . "/satspay/api/v1/charge", [
+                "body" => json_encode($charge_api_data),
+                "headers" => [
+                    "Content-Type" => "application/json",
+                    "X-API-KEY" => $api_key,
+
+                ],
+            ]);
+        if (is_wp_error($charge_api_response)) {
+                    error_log("API Error: " . $charge_api_response->get_error_message());
+                } else {
+                    // API call was successful
+                    $charge_api_body = wp_remote_retrieve_body($charge_api_response);
+                    error_log($charge_api_body);
+                    $decoded_charge_response = json_decode($charge_api_body);
+                    if ($decoded_charge_response !== null) {
+                        $charge_id = $decoded_charge_response->id;
+                        // Redirect to charge
+                        wp_redirect($api_endpoint.'/satspay/'.$charge_id);
+
+                    }
+                    }
+    }
+
+
+
+    // Check if the 'paid' parameter is present in the URL
+    $is_paid = isset($_GET['paid']) && $_GET['paid'] === 'true';
+
+    // If 'paid' is true, display a thank you message
+    if ($is_paid) {
+
+        $donation_details = array(
+            'title' => 'John Doe',
+            'amount' => '$50',
+            'message' => 'Thank you for your support!',
+        );
+
+        save_donation_message($donation_details);
+
+        return '<p>Thanks for your donation!</p>';
+
+
     }
 
     // Retrieve selected currency options
