@@ -13,6 +13,7 @@ function lnc_btcdonate_register_settings()
     add_settings_field("lnc_btcdonate_api_endpoint","API Endpoint","lnc_btcdonate_api_endpoint_callback","lnc_btcdonate_settings","lnc_btcdonate_settings_section");
     add_settings_field("lnc_btcdonate_api_key","API Key","lnc_btcdonate_api_key_callback","lnc_btcdonate_settings","lnc_btcdonate_settings_section");
     add_settings_field("lnc_btcdonate_api_wallet","Lightning Wallet","lnc_btcdonate_api_wallet_callback","lnc_btcdonate_settings","lnc_btcdonate_settings_section");
+    add_settings_field("lnc_btcdonate_api_createpost","Webhook after payment","lnc_btcdonate_api_createpost_callback","lnc_btcdonate_settings","lnc_btcdonate_settings_section");
     add_settings_field("lnc_btcdonate_currency_options","Currency Options","lnc_btcdonate_currency_options_callback","lnc_btcdonate_settings","lnc_btcdonate_settings_section");
 }
 
@@ -73,9 +74,6 @@ function lnc_btcdonate_render_settings_page()
     </div>
     <?php
 }
-
-add_action("admin_menu", "lnc_btcdonate_menu_page");
-add_action("admin_init", "lnc_btcdonate_register_settings");
 
 function lnc_btcdonate_sanitize_currency_options($input)
 {
