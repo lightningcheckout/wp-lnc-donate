@@ -4,14 +4,15 @@ function lnc_btcdonate_register_settings()
 {
     register_setting("lnc_btcdonate_settings_group", "lnc_btcdonate_api_endpoint");
     register_setting("lnc_btcdonate_settings_group","lnc_btcdonate_api_key");
-    register_setting("lnc_btcdonate_settings_group","lnc_btcdonate_api_secret");
+    register_setting("lnc_btcdonate_settings_group","lnc_btcdonate_api_wallet");
+    register_setting("lnc_btcdonate_settings_group","lnc_btcdonate_api_createpost");
     register_setting("lnc_btcdonate_settings_group","lnc_btcdonate_currency_options","lnc_btcdonate_sanitize_currency_options");
 
     add_settings_section("lnc_btcdonate_settings_section","API Settings","lnc_btcdonate_settings_section_callback","lnc_btcdonate_settings");
 
     add_settings_field("lnc_btcdonate_api_endpoint","API Endpoint","lnc_btcdonate_api_endpoint_callback","lnc_btcdonate_settings","lnc_btcdonate_settings_section");
     add_settings_field("lnc_btcdonate_api_key","API Key","lnc_btcdonate_api_key_callback","lnc_btcdonate_settings","lnc_btcdonate_settings_section");
-    add_settings_field("lnc_btcdonate_api_secret","Lightning Wallet","lnc_btcdonate_api_secret_callback","lnc_btcdonate_settings","lnc_btcdonate_settings_section");
+    add_settings_field("lnc_btcdonate_api_wallet","Lightning Wallet","lnc_btcdonate_api_wallet_callback","lnc_btcdonate_settings","lnc_btcdonate_settings_section");
     add_settings_field("lnc_btcdonate_currency_options","Currency Options","lnc_btcdonate_currency_options_callback","lnc_btcdonate_settings","lnc_btcdonate_settings_section");
 }
 
@@ -33,10 +34,16 @@ function lnc_btcdonate_api_key_callback()
     echo "<input type='text' name='lnc_btcdonate_api_key' value='$key' />";
 }
 
-function lnc_btcdonate_api_secret_callback()
+function lnc_btcdonate_api_wallet_callback()
 {
-    $secret = get_option("lnc_btcdonate_api_secret");
-    echo "<input type='text' name='lnc_btcdonate_api_secret' value='$secret' />";
+    $wallet = get_option("lnc_btcdonate_api_wallet");
+    echo "<input type='text' name='lnc_btcdonate_api_wallet' value='$wallet' />";
+}
+
+function lnc_btcdonate_api_createpost_callback()
+{
+    $createpost = get_option("lnc_btcdonate_api_createpost");
+    echo "<input type='checkbox' name='lnc_btcdonate_api_createpost' value='$createpost' />";
 }
 
 function lnc_btcdonate_currency_options_callback()

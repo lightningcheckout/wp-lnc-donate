@@ -10,12 +10,9 @@ function lnc_btcdonate_shortcode()
 
         if (!isset($_POST["lnc_btcdonate_nonce_field"]) || !wp_verify_nonce($_POST["lnc_btcdonate_nonce_field"], "lnc_btcdonate_nonce")) {
         // Nonce verification failed, handle the error as needed
-        // For example, you can redirect the user back to the form
         wp_redirect($_SERVER["REQUEST_URI"]);
         exit;
     }
-
-        error_log("================================================================");
 
         // Retrieve form data
         $donation_amount = sanitize_text_field($_POST["donation_amount"]);
@@ -26,7 +23,9 @@ function lnc_btcdonate_shortcode()
         // Retrieve API settings from the admin
         $api_endpoint = get_option("lnc_btcdonate_api_endpoint");
         $api_key = get_option("lnc_btcdonate_api_key");
-        $api_lnwallet = get_option("lnc_btcdonate_api_secret");
+        $api_lnwallet = get_option("lnc_btcdonate_api_wallet");
+        $api_createpost = get_option("lnc_btcdonate_api_createpost");
+
 
         // get blog name
         $site_name = get_bloginfo('name');
