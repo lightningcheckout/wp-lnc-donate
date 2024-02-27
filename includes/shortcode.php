@@ -77,11 +77,16 @@ function lnc_btcdonate_shortcode()
                 "description" => 'Donation '. $site_name,
                 "completelink" => $redirect_url,
                 "completelinktext" => "Thanks, go back to ". $site_name,
-                "webhook" => $base_url.'wp-json/lightningcheckout-donate/v1/webhook',
                 "time" => 1440,
                 "amount" => $amount_sats,
                 "extra" => '{"mempool_endpoint": "https://mempool.space", "network": "Mainnet", "misc": {"lnc_product": "BTCDONATE", "donate_title": "'.$donar_title.'", "donate_message": "'.$donor_comment.'"}}',
             ];
+
+        // add if should create post
+        if ($api_createpost): {
+            $charge_api_data["webhook"] = $base_url.'wp-json/lightningcheckout-donate/v1/webhook';
+        }
+
 
             // Make API call
             $charge_api_response = wp_remote_post($api_endpoint . "/satspay/api/v1/charge", [

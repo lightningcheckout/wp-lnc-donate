@@ -11,8 +11,8 @@ add_action('rest_api_init', 'register_webhook_endpoint');
 
 function save_donation_message($donation_details) {
     $post_data = array(
-        'post_title' => $donation_details['title'] . ' ('.$donation_details['amount'].' sats)',
-        'post_content' => $donation_details['message'],
+        'post_title' => $donation_details['donation_title'],
+        'post_content' => $donation_details['donation_message'],
         'post_type' => 'donation',
         'post_status' => 'publish',
     );
@@ -23,13 +23,20 @@ function save_donation_message($donation_details) {
 // Handle the incoming webhook data
 function handle_webhook($request) {
     $data = $request->get_json_params();
-    error_log(data);
+    // Data should look like:
+    //{
+    //    "donation_title": "title of the post",
+    //    "donation_message": "donation message for site",
+    //    "donation_amount": 10,
+    //    "donation_amount_fiat": 1.21
+    //}
 
 
     $donation_details = array(
-        'title' => $data['description'],
-        'amount' => $data['amount'],
-        'message' => $data['payment_hash'],
+        'title' => $data['donation_title'],
+        'amount' => $data['donation_amount'],
+        'amount_fiat' => $data['donation_amount_fiat'],
+        'message' => $data['donation_message'],
     );
 
     save_donation_message($donation_details);
@@ -41,10 +48,9 @@ function handle_webhook($request) {
             'post_title'   => sanitize_text_field($data['title']),
             'post_content' => wp_kses_post($data['content']),
             'post_status'  => 'publish',
-            'post_type'    => 'donation',  // Change this to your custom post type
+            'post_type'    => 'donation',
         );
 
-        // Insert the post
         $post_id = wp_insert_post($post_data);
 
         if (!is_wp_error($post_id)) {
