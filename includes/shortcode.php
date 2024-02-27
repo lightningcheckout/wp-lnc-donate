@@ -8,7 +8,9 @@ function lnc_btcdonate_shortcode()
     // Handle form submission
     if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["submit"])) {
 
+
         if (!isset($_POST["lnc_btcdonate_nonce_field"]) || !wp_verify_nonce($_POST["lnc_btcdonate_nonce_field"], "lnc_btcdonate_nonce")) {
+        error_log('Nonce verification failed, handle the error as needed');
         // Nonce verification failed, handle the error as needed
         wp_redirect($_SERVER["REQUEST_URI"]);
         exit;
@@ -35,7 +37,7 @@ function lnc_btcdonate_shortcode()
 
         // Convert amount to sat if not sat
         if ($selected_currency == 'SAT') {
-            $amount_sats = $donation_amount;
+            $amount_sats = intval($donation_amount);
         } else {
                 $conversion_api_data = [
                     "from_" => $selected_currency,
@@ -83,7 +85,7 @@ function lnc_btcdonate_shortcode()
             ];
 
         // add if should create post
-        if ($api_createpost == 1) {
+        if ($api_createpost) {
             $charge_api_data["webhook"] = $base_url.'wp-json/lightningcheckout-donate/v1/webhook';
         }
 
@@ -120,7 +122,7 @@ function lnc_btcdonate_shortcode()
 
     // If 'paid' is true, display a thank you message
     if ($is_paid) {
-        return '<p>Thanks for your donation!</p>';
+        return '<div style="display: flex;justify-content: center;padding: 5px;"><b>Thanks for your donation!</b></div>';
     }
 
     // Retrieve selected currency options
@@ -129,7 +131,8 @@ function lnc_btcdonate_shortcode()
     $selected_currencies = array_map("trim", $selected_currencies);
     // Your shortcode logic here
     ?>
-        <form action="" method="post">
+<form action="" method="post">
+  <?php wp_nonce_field('lnc_btcdonate_nonce', 'lnc_btcdonate_nonce_field'); ?>
            <div class="form-row">
               <div class="form-group col-md-12">
                  <input placeholder="Name" type="text" class="form-control" id="donor-name" name="donor_name" />
@@ -137,7 +140,7 @@ function lnc_btcdonate_shortcode()
            </div>
            <div class="form-row">
               <div class="form-group col-md-8">
-                 <input type="text" placeholder="Amount" class="form-control" id="donation-amount" name="donation_amount" />
+              <input type="number" min="0.0" step=".01" placeholder="0" class="form-control" id="donation-amount" name="donation_amount" />
               </div>
               <div class="form-group col-md-4">
                  <select id="donor-currency" class="form-control" name="donor_currency">
@@ -168,7 +171,6 @@ function lnc_btcdonate_shortcode()
      * @param string $form_content The default form content.
      */
     $form_content = apply_filters("lnc_btcdonate_output", $form_content);
-    error_log("Lightning Checkout Bitcoin Donate shortcode called.");
     return $form_content;
 }
 
