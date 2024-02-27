@@ -83,7 +83,7 @@ function lnc_btcdonate_shortcode()
             ];
 
         // add if should create post
-        if ($api_createpost): {
+        if ($api_createpost == 1) {
             $charge_api_data["webhook"] = $base_url.'wp-json/lightningcheckout-donate/v1/webhook';
         }
 
