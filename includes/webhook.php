@@ -10,58 +10,69 @@ function register_webhook_endpoint() {
 add_action('rest_api_init', 'register_webhook_endpoint');
 
 function save_donation_message($donation_details) {
-    $post_data = array(
-        'post_title' => $donation_details['donation_title'],
-        'post_content' => $donation_details['donation_message'],
-        'post_type' => 'donation',
-        'post_status' => 'publish',
-    );
-    wp_insert_post($post_data);
-}
+    // Check if the payment hash is provided
+    if (isset($donation_details['payment_hash'])) {
+        // Query to check if a post with the payment hash already exists
+        $payment_hash = sanitize_text_field($donation_details['payment_hash']);
+        $existing_post = get_posts(array(
+            'post_type' => 'donation',
+            'meta_query' => array(
+                array(
+                    'key' => '_payment_hash',
+                    'value' => $payment_hash,
+                ),
+            ),
+        ));
 
+        // If no post exists with the given payment hash, insert a new post
+        $charge_data = json_encode($donation_details['details']['extra']['charge_data']);
+        if (empty($existing_post)) {
+            $post_data = array(
+                'post_title' => $charge_data['misc']['donate_title'],
+                'post_content' => $charge_data['misc']['donate_message'],
+                'post_type' => 'donation',
+                'post_status' => 'publish',
+            );
+
+            // Insert the post and Save payment hash as post meta
+            $post_id = wp_insert_post($post_data);
+            if (!is_wp_error($post_id)) {
+                update_post_meta($post_id, '_payment_hash', $payment_hash);
+            }
+        } else {
+            error_log("Post with payment hash already exists: " . $payment_hash);
+        }
+    }
+}
 
 // Handle the incoming webhook data
 function handle_webhook($request) {
+
+    // Receive payment hash
+    // get payment data via payemnt hash
     $data = $request->get_json_params();
-    // Data should look like:
-    //{
-    //    "donation_title": "title of the post",
-    //    "donation_message": "donation message for site",
-    //    "donation_amount": 10,
-    //    "donation_amount_fiat": 1.21
-    //}
 
+    // Retrieve API settings from the admin
+    $api_endpoint = get_option("lnc_btcdonate_api_endpoint");
+    $api_key = get_option("lnc_btcdonate_api_key");
 
-    $donation_details = array(
-        'title' => $data['donation_title'],
-        'amount' => $data['donation_amount'],
-        'amount_fiat' => $data['donation_amount_fiat'],
-        'message' => $data['donation_message'],
-    );
+    // Make API call
+    $payment_response = wp_remote_post($api_endpoint . "/api/v1/payments/".$data['payment_hash'], [
+        "headers" => [
+            "Content-Type" => "application/json",
+            "X-API-KEY" => $api_key,
 
-    save_donation_message($donation_details);
-
-    // Verify that the incoming request has the required data
-    if (isset($data['title']) && isset($data['content'])) {
-        // Prepare post data
-        $post_data = array(
-            'post_title'   => sanitize_text_field($data['title']),
-            'post_content' => wp_kses_post($data['content']),
-            'post_status'  => 'publish',
-            'post_type'    => 'donation',
-        );
-
-        $post_id = wp_insert_post($post_data);
-
-        if (!is_wp_error($post_id)) {
-            // Successfully created the post
-            return new WP_REST_Response(array('message' => 'Post created successfully.'), 200);
-        } else {
-            // Failed to create the post
-            return new WP_REST_Response(array('message' => 'Failed to create post.'), 500);
-        }
+        ],
+    ]);
+    if (is_wp_error($api_response)) {
+        error_log("API Error: " . $api_response->get_error_message());
     } else {
-        // Required data is missing
-        return new WP_REST_Response(array('message' => 'Missing required data.'), 400);
-    }
+        // API call was successful
+        $api_body = wp_remote_retrieve_body($api_response);
+        $decoded_response = json_decode($api_body);
+        if ($decoded_response !== null) {
+            save_donation_message($decoded_response);
+            return new WP_REST_Response(array('message' => 'Post created successfully.'), 200);
+        }
+    return new WP_REST_Response(array('message' => 'Failed to create post.'), 500);
 }
