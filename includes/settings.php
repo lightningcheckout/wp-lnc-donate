@@ -13,7 +13,7 @@ function lnc_btcdonate_register_settings()
     add_settings_field("lnc_btcdonate_api_endpoint","API Endpoint","lnc_btcdonate_api_endpoint_callback","lnc_btcdonate_settings","lnc_btcdonate_settings_section");
     add_settings_field("lnc_btcdonate_api_key","API Key","lnc_btcdonate_api_key_callback","lnc_btcdonate_settings","lnc_btcdonate_settings_section");
     add_settings_field("lnc_btcdonate_api_wallet","Lightning Wallet","lnc_btcdonate_api_wallet_callback","lnc_btcdonate_settings","lnc_btcdonate_settings_section");
-    add_settings_field("lnc_btcdonate_api_createpost","Webhook after payment","lnc_btcdonate_api_createpost_callback","lnc_btcdonate_settings","lnc_btcdonate_settings_section");
+    add_settings_field("lnc_btcdonate_api_createpost", "Enable lnc_btcdonate_api_createpost", "lnc_btcdonate_api_createpost_callback", "lnc_btcdonate_settings", "lnc_btcdonate_settings_section");
     add_settings_field("lnc_btcdonate_currency_options","Currency Options","lnc_btcdonate_currency_options_callback","lnc_btcdonate_settings","lnc_btcdonate_settings_section");
 }
 
@@ -43,8 +43,13 @@ function lnc_btcdonate_api_wallet_callback()
 
 function lnc_btcdonate_api_createpost_callback()
 {
-    $createpost = get_option("lnc_btcdonate_api_createpost");
-    echo "<input type='checkbox' name='lnc_btcdonate_api_createpost' value='$createpost' />";
+    $enable_api_createpost = get_option("lnc_btcdonate_api_createpost");
+    ?>
+    <label for="lnc_btcdonate_api_createpost">
+        <input type="checkbox" id="lnc_btcdonate_api_createpost" name="lnc_btcdonate_api_createpost" value="0" <?php checked(0, $enable_api_createpost); ?> />
+        Create donation post after payment
+    </label>
+    <?php
 }
 
 function lnc_btcdonate_currency_options_callback()
