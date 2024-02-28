@@ -26,7 +26,7 @@ function lnc_btcdonate_shortcode()
         // Get defaults
         $site_name = get_bloginfo('name');
         $base_url = home_url();
-        $redirect_url = add_query_arg('', '', $base_url . $_SERVER['REQUEST_URI']).'?donated=true';
+        $redirect_url = add_query_arg('', '', $base_url . $_SERVER['REQUEST_URI']).'?donated=true#donateform';
 
 		// Retrieve form data
         $donation_amount = sanitize_text_field($_POST["donation_amount"]);
@@ -138,7 +138,7 @@ function lnc_btcdonate_shortcode()
 
     // If 'paid' is true, display a thank you message
     if ($is_paid) {
-        return '<div style="display: flex;justify-content: center;padding: 10px;"><b>Thanks for your donation!</b></div>';
+        return '<div style="display: flex;justify-content: center;padding: 10px;" id="donateform"><b>Thanks for your donation!</b></div>';
     }
 
     // Retrieve selected currency options
@@ -149,7 +149,7 @@ function lnc_btcdonate_shortcode()
     ?>
 <form action="" method="post">
   <?php wp_nonce_field('lnc_btcdonate_nonce', 'lnc_btcdonate_nonce_field'); ?>
-           <div class="form-row">
+           <div class="form-row" id="donateform">
               <div class="form-group col-md-12">
                  <input placeholder="Name" type="text" class="form-control" id="donor-name" name="donor_name" />
               </div>
@@ -192,3 +192,33 @@ function lnc_btcdonate_shortcode()
 
 // Register the shortcode
 add_shortcode("lightningcheckout_bitcoin_donate", "lnc_btcdonate_shortcode");
+
+function publish_donations($atts) {
+    ob_start();
+
+    $args = array(
+        'post_type' => 'donation', // Replace with your actual custom post type
+        'posts_per_page' => -1, // Display all items
+    );
+
+    $custom_query = new WP_Query($args);
+
+    if ($custom_query->have_posts()) :
+        while ($custom_query->have_posts()) : $custom_query->the_post();
+            // Output the HTML structure with custom classes
+            ?>
+            <div class="custom-post-type-item">
+                <h3><?php the_title(); ?></h3>
+                <div class="content"><?php the_content(); ?></div>
+            </div>
+            <?php
+        endwhile;
+        wp_reset_postdata(); // Reset post data to restore the main query's context
+    else :
+        echo 'No custom post type items found.';
+    endif;
+
+    return ob_get_clean();
+}
+
+add_shortcode('publish_donations', 'publish_donations');
