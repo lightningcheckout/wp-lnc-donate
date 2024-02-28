@@ -16,12 +16,6 @@ function lnc_btcdonate_shortcode()
         exit;
     }
 
-        // Retrieve form data
-        $donation_amount = sanitize_text_field($_POST["donation_amount"]);
-        $donor_name = sanitize_text_field($_POST["donor_name"]);
-        $donor_comment = sanitize_text_field($_POST["donor_comment"]);
-        $selected_currency = sanitize_text_field($_POST["donor_currency"]);
-
         // Retrieve API settings from the admin
         $api_endpoint = get_option("lnc_btcdonate_api_endpoint");
         $api_key = get_option("lnc_btcdonate_api_key");
@@ -29,10 +23,16 @@ function lnc_btcdonate_shortcode()
         $api_createpost = get_option("lnc_btcdonate_api_createpost");
 
 
-        // get blog name
+        // Get defaults
         $site_name = get_bloginfo('name');
         $base_url = home_url();
-        $redirect_url = add_query_arg('', '', $base_url . $_SERVER['REQUEST_URI']).'?paid=true';
+        $redirect_url = add_query_arg('', '', $base_url . $_SERVER['REQUEST_URI']).'?donated=true';
+
+		// Retrieve form data
+        $donation_amount = sanitize_text_field($_POST["donation_amount"]);
+        $donor_name = sanitize_text_field($_POST["donor_name"]);
+        $donor_comment = esc_html($_POST["donor_comment"]);
+        $selected_currency = sanitize_text_field($_POST["donor_currency"]);
 
 
         // Convert amount to sat if not sat
@@ -67,7 +67,8 @@ function lnc_btcdonate_shortcode()
                     }
             }
 
-        if (strlen($donor_name) > 2) {
+		// Set donation title once amount sats is known
+		if (strlen($donor_name) > 2) {
             $donar_title = $donor_name.' ('.$amount_sats.' sats)';
         } else {
             $donar_title = 'Anonymous ('.$amount_sats.' sats)';
@@ -81,12 +82,12 @@ function lnc_btcdonate_shortcode()
                 "completelinktext" => "Thanks, go back to ". $site_name,
                 "time" => 1440,
                 "amount" => $amount_sats,
-                "extra" => '{"mempool_endpoint": "https://mempool.space", "network": "Mainnet", "misc": {"lnc_product": "BTCDONATE", "donate_title": "'.$donar_title.'", "donate_message": "'.$donor_comment.'"}}',
+                "extra" => '{"mempool_endpoint": "https://mempool.space", "network": "Mainnet", "misc": {"lnc_product": "BTCDONATE"}}',
             ];
 
-        // add if should create post
+        // If a post is needed, the webhook is as well, so add to charge data.
         if ($api_createpost) {
-            $charge_api_data["webhook"] = 'https://test-portal.lightningcheckout.eu/merchant/webhook/wp-donate';
+            $charge_api_data["webhook"] = $base_url.'/wp-json/lightningcheckout-donate/v1/webhook';
         }
 
 
@@ -104,25 +105,40 @@ function lnc_btcdonate_shortcode()
                 } else {
                     // API call was successful
                     $charge_api_body = wp_remote_retrieve_body($charge_api_response);
-                    error_log($charge_api_body);
                     $decoded_charge_response = json_decode($charge_api_body);
                     if ($decoded_charge_response !== null) {
                         $charge_id = $decoded_charge_response->id;
-                        // Redirect to charge
-                        wp_redirect($api_endpoint.'/satspay/'.$charge_id);
+						error_log("Payment hash to process: ".$decoded_charge_response->payment_hash);
+						if ($api_createpost) {
+							// Create post in concept
+							$post_data = array(
+								'post_title' => $donar_title,
+								'post_content' => $donor_comment,
+								'post_type' => 'donation',
+								'post_status' => 'draft',
+							);
 
+							// Insert the post and Save payment hash as post meta
+							$post_id = wp_insert_post($post_data);
+							if (!is_wp_error($post_id)) {
+								error_log("Payment processing: ".$decoded_charge_response->payment_hash);
+								update_post_meta($post_id, '_payment_hash', $decoded_charge_response->payment_hash);
+							}
+						}
+                        wp_redirect($api_endpoint.'/satspay/'.$charge_id);
+						exit;
                     }
                 }
     }
 
 
 
-    // Check if the 'paid' parameter is present in the URL
-    $is_paid = isset($_GET['paid']) && $_GET['paid'] === 'true';
+    // Check if the 'donated' parameter is present in the URL
+    $is_paid = isset($_GET['donated']) && $_GET['donated'] === 'true';
 
     // If 'paid' is true, display a thank you message
     if ($is_paid) {
-        return '<div style="display: flex;justify-content: center;padding: 5px;"><b>Thanks for your donation!</b></div>';
+        return '<div style="display: flex;justify-content: center;padding: 10px;"><b>Thanks for your donation!</b></div>';
     }
 
     // Retrieve selected currency options

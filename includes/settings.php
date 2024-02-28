@@ -5,7 +5,10 @@ function lnc_btcdonate_register_settings()
     register_setting("lnc_btcdonate_settings_group", "lnc_btcdonate_api_endpoint");
     register_setting("lnc_btcdonate_settings_group","lnc_btcdonate_api_key");
     register_setting("lnc_btcdonate_settings_group","lnc_btcdonate_api_wallet");
-    register_setting("lnc_btcdonate_settings_group","lnc_btcdonate_api_createpost");
+    register_setting("lnc_btcdonate_settings_group", "lnc_btcdonate_api_createpost", array(
+        'type' => 'boolean', // Ensure that the type is set to boolean
+        'sanitize_callback' => 'sanitize_checkbox', // Add a sanitize callback for checkbox
+    ));
     register_setting("lnc_btcdonate_settings_group","lnc_btcdonate_currency_options","lnc_btcdonate_sanitize_currency_options");
 
     add_settings_section("lnc_btcdonate_settings_section","API Settings","lnc_btcdonate_settings_section_callback","lnc_btcdonate_settings");
@@ -16,6 +19,13 @@ function lnc_btcdonate_register_settings()
     add_settings_field("lnc_btcdonate_api_createpost", "After payment", "lnc_btcdonate_api_createpost_callback", "lnc_btcdonate_settings", "lnc_btcdonate_settings_section");
     add_settings_field("lnc_btcdonate_currency_options","Currency Options","lnc_btcdonate_currency_options_callback","lnc_btcdonate_settings","lnc_btcdonate_settings_section");
 }
+
+// Make sure the checkboxes are saved correctly
+function sanitize_checkbox($input)
+{
+    return (bool) $input;
+}
+
 
 function lnc_btcdonate_settings_section_callback()
 {
@@ -43,14 +53,14 @@ function lnc_btcdonate_api_wallet_callback()
 
 function lnc_btcdonate_api_createpost_callback()
 {
-    $enable_api_createpost = get_option("lnc_btcdonate_api_createpost");
-    ?>
+    $enable_api_createpost = get_option("lnc_btcdonate_api_createpost", false); ?>
     <label for="lnc_btcdonate_api_createpost">
-        <input type="checkbox" id="lnc_btcdonate_api_createpost" name="lnc_btcdonate_api_createpost" value="0" <?php checked(0, $enable_api_createpost); ?> />
+        <input type="checkbox" id="lnc_btcdonate_api_createpost" name="lnc_btcdonate_api_createpost" <?php checked(true, $enable_api_createpost); ?> />
         Create donation post
     </label>
     <?php
 }
+
 
 function lnc_btcdonate_currency_options_callback()
 {
