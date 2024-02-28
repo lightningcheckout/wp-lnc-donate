@@ -9,6 +9,7 @@ function create_donation_post_type() {
         'public' => true,
         'has_archive' => false,
         'publicly_queryable' => false,
+		'revisions' => false,
         'supports' => array('title', 'editor'),
     ));
 }

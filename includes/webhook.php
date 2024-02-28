@@ -14,34 +14,39 @@ function publish_donation($donation_details) {
     if (isset($donation_details->details->payment_hash)) {
         // Query to check if a post with the payment hash already exists
         $payment_hash = $donation_details->details->payment_hash;
-        $existing_post = get_posts(array(
-            'post_type' => 'donation',
-            'meta_query' => array(
-                array(
-                    'key' => '_payment_hash',
-                    'value' => $payment_hash,
-                ),
-            ),
-        ));
+		$args = array(
+			'post_type' => 'donation',
+			'post_status' => array('draft'),
+			'meta_query' => array(
+				array(
+					'key' => '_payment_hash',
+					'value' => $payment_hash,
+					'compare' => '=',
+				),
+			),
+			'fields' => 'ids', // Fetch only post IDs
+		);
 
-        // If no post exists with the given payment hash, insert a new post
-        if (empty($existing_post)) {
-			error_log("No post found with payment hash: " . $payment_hash);
-			return False;
-        } else {
-			// Publish donation
-			$post = $existing_post[0];
-    		$post_data = array(
-        		'ID' => $post->ID,
+		$posts = get_posts($args);
+		if ($posts) {
+			foreach ($posts as $post_id) {
+				 $post_data = array(
+        		'ID' => $post_id,
         		'post_status' => 'publish',
     			);
     		$updated = wp_update_post($post_data);
 			return True;
+			}
+		} else {
+			return False;
+
+		}
+
         }
-    } else {
+	else {
 		return False;
 	}
-}
+    }
 
 // Handle the incoming webhook data
 function handle_webhook($request) {
@@ -65,7 +70,6 @@ function handle_webhook($request) {
         // API call was successful
         $api_body = wp_remote_retrieve_body($payment_response);
         $decoded_response = json_decode($api_body);
-		error_log(json_encode($decoded_response));
         if ($decoded_response !== null) {
             $save_donation_result = publish_donation($decoded_response);
 			if ($save_donation_result) {
