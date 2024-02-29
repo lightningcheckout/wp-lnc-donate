@@ -2,7 +2,7 @@
 /*
 Plugin Name: Lightning Checkout - Bitcoin Donate
 Description: Accept Bitcoin Donations on your Wordpress website.
-Version: 0.1
+Version: 0.2
 Author: Lightning Checkout
 */
 
