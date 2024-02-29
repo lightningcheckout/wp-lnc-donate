@@ -6,6 +6,24 @@ Version: 0.1
 Author: Lightning Checkout
 */
 
+require 'plugin-update-checker/plugin-update-checker.php';
+use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
+
+$myUpdateChecker = PucFactory::buildUpdateChecker(
+	'https://github.com/lightningcheckout/wp-lnc-donate/',
+	__FILE__,
+	'wp-lnc-donate'
+);
+
+
+//Set the branch that contains the stable release.
+$myUpdateChecker->setBranch('main');
+
+//Optional: If you're using a private repository, specify the access token like this:
+//$myUpdateChecker->setAuthentication('your-token-here');
+
+//If you want to use release assets, call the enableReleaseAssets() method after creating the update checker instance:
+$myUpdateChecker->getVcsApi()->enableReleaseAssets();
 
 include_once(plugin_dir_path(__FILE__) . 'includes/settings.php');
 include_once(plugin_dir_path(__FILE__) . 'includes/custom-post-type.php');
