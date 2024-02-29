@@ -25,8 +25,12 @@ When SAT no conversion is done, For other options a conversion is done, before c
 
 
 ## Shortcode donation form
-To show the donation form on a page or post you must include the following shortcode: [lightningcheckout_bitcoin_donate] into the page/post.
+To show the donation form on a page or post you must include the following shortcode: 
+```[lightningcheckout_bitcoin_donate]```
+into the page/post.
 
 ## Shortcode to show donations
-To show donations on a page or post you must include the following shortcode: [publish_donations] into the page/post.
+To show donations on a page or post you must include the following shortcode: 
+```[publish_donations]```
+into the page/post.
 Using this makes only sense when the option 'After payment create donation post' is enabled.
