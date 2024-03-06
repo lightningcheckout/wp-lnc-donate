@@ -125,8 +125,13 @@ function lnc_btcdonate_shortcode()
 								update_post_meta($post_id, '_payment_hash', $decoded_charge_response->payment_hash);
 							}
 						}
-                        wp_redirect($api_endpoint.'/satspay/'.$charge_id);
-						exit;
+                      	if (headers_sent()) {
+                          	$redirect = "<script>window.location = '".$api_endpoint.'/satspay/'.$charge_id."';</script>";
+                            echo $redirect;
+                        }
+                        else{
+                            wp_redirect($api_endpoint.'/satspay/'.$charge_id);
+                          	exit;
                     }
                 }
     }
