@@ -189,19 +189,28 @@ function lnc_btcdonate_shortcode()
               <div class="form-group col-md-8">
               <input type="number" min="0.0" step=".01" placeholder="0" class="form-control" id="donation-amount" name="donation_amount" />
               </div>
+			   
+			   
               <div class="form-group col-md-4">
-                 <select id="donor-currency" class="form-control" name="donor_currency">
-                    <?php foreach ($selected_currencies as $code): ?>
-                    <?php $name =
-                        lnc_btcdonate_get_currency_list()[$code] ?? ""; ?>
-                    <option value="<?php echo esc_attr(
-                        $code
-                    ); ?>"><?php echo esc_html($name); ?> (<?php echo esc_html(
-     $code
- ); ?>)</option>
-                    <?php endforeach; ?>
-                 </select>
+				  
+<div class="elementor-field-type-select ">
+<div class="elementor-field elementor-select-wrapper remove-before ">
+
+<select class="form-control elementor-field-textual" id="donor-currency" name="donor_currency">
+<?php foreach ($selected_currencies as $code): ?>
+<?php $name =
+lnc_btcdonate_get_currency_list()[$code] ?? ""; ?>
+<option value="<?php echo esc_attr(
+$code
+); ?>"><?php echo esc_html($name); ?> (<?php echo esc_html(
+$code
+); ?>)</option>
+<?php endforeach; ?>
+</select>
+</div>
+</div>
               </div>
+
            </div>
            <div class="form-row">
               <div class="form-group col-md-12">
@@ -210,7 +219,7 @@ function lnc_btcdonate_shortcode()
            </div>
            <div class="form-row">
               <div class="form-group col-md-12">
-                 <button type="submit" name="submit" class="btn btn-primary">Donate!</button>
+                 <button type="submit" name="submit" class="elementor-button btn btn-solid btn-icon-shaped btn-has-label">Donate!</button>
               </div>
            </div>
         </form>
