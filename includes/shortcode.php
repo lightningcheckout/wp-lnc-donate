@@ -188,7 +188,7 @@ function lnc_btcdonate_shortcode()
            </div>
            <div class="form-row">
               <div class="form-group col-md-8">
-              <input type="number" min="1" step="1" placeholder="1" class="form-control" id="donation-amount" name="donation_amount" required oninvalid="this.setCustomValidity('Vul a.u.b. rond getal groter dan 1 in')"
+              <input type="number" min="0.01" step="0.01" placeholder="1.00" class="form-control" id="donation-amount" name="donation_amount" required oninvalid="this.setCustomValidity('Vul a.u.b. een getal groter dan 0.01 in')"
               oninput="setCustomValidity('')" />
               </div>
               <div class="form-group col-md-4">
@@ -212,7 +212,7 @@ function lnc_btcdonate_shortcode()
            </div>
            <div class="form-row">
               <div class="form-group col-md-12">
-                 <button type="submit" name="submit" class="breakdance-link button-atom button-atom--primary bde-button__button btn btn-primary"><?php echo __( 'Donate' )?>!</button>
+                 <button type="submit" name="submit" class="btn btn-primary"><?php echo __( 'Donate' )?>!</button>
               </div>
            </div>
         </form>
