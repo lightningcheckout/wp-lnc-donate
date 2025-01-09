@@ -188,7 +188,7 @@ function lnc_btcdonate_shortcode()
            </div>
            <div class="form-row">
               <div class="form-group col-md-8">
-              <input type="number" min="1" step="1" placeholder="1" class="form-control" id="donation-amount" name="donation_amount" oninvalid="this.setCustomValidity('Vul a.u.b. rond getal groter dan 1 in')"
+              <input type="number" min="1" step="1" placeholder="1" class="form-control" id="donation-amount" name="donation_amount" required oninvalid="this.setCustomValidity('Vul a.u.b. rond getal groter dan 1 in')"
               oninput="setCustomValidity('')" />
               </div>
               <div class="form-group col-md-4">
