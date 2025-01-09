@@ -51,3 +51,32 @@ function lnc_btcdonate_render_custom_metabox($post) {
     <input type="text" id="lnc_btcdonate_payment_hash" size="75" name="lnc_btcdonate_payment_hash" value="<?php echo esc_attr($payment_hash); ?> " disabled />
     <?php
 }
+
+add_filter( 'manage_donation_posts_columns', 'donation_filter_posts_columns' );
+function donation_filter_posts_columns( $columns ) {
+	$columns = array(
+			'cb' => '&lt;input type="checkbox" />',
+			'title' => __( 'Title' ),
+			'payment_hash' => __( 'Payment Hash' ),
+			'date' => __( 'Date' )
+		);
+
+	return $columns;
+}
+
+add_action( 'manage_donation_posts_custom_column', 'manage_donation_columns', 10, 2 );
+function manage_donation_columns( $column, $post_id ) {
+
+	switch( $column ) {
+		/* If displaying the 'payment_hash' column. */
+		case 'payment_hash' :
+			/* Get the post meta. */
+			$payment_hash = get_post_meta( $post_id, '_payment_hash', true );
+			/* If no payment hash is found, output an empty message. */
+			if ( empty( $payment_hash ) )
+				echo __( '' );
+			else
+				printf( $payment_hash );
+			break;
+	}
+}

@@ -36,19 +36,19 @@ function lnc_btcdonate_settings_section_callback()
 function lnc_btcdonate_api_endpoint_callback()
 {
     $endpoint = get_option("lnc_btcdonate_api_endpoint");
-    echo "<input type='text' name='lnc_btcdonate_api_endpoint' value='$endpoint' />";
+    echo "<input type='text' name='lnc_btcdonate_api_endpoint' value='$endpoint' size='50' />";
 }
 
 function lnc_btcdonate_api_key_callback()
 {
     $key = get_option("lnc_btcdonate_api_key");
-    echo "<input type='text' name='lnc_btcdonate_api_key' value='$key' />";
+    echo "<input type='text' name='lnc_btcdonate_api_key' value='$key' size='50' />";
 }
 
 function lnc_btcdonate_api_wallet_callback()
 {
     $wallet = get_option("lnc_btcdonate_api_wallet");
-    echo "<input type='text' name='lnc_btcdonate_api_wallet' value='$wallet' />";
+    echo "<input type='text' name='lnc_btcdonate_api_wallet' value='$wallet' size='50' />";
 }
 
 function lnc_btcdonate_api_createpost_callback()

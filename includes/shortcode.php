@@ -182,12 +182,14 @@ function lnc_btcdonate_shortcode()
   <?php wp_nonce_field("lnc_btcdonate_nonce", "lnc_btcdonate_nonce_field"); ?>
            <div class="form-row" id="donateform">
               <div class="form-group col-md-12">
-                 <input placeholder="Name" type="text" class="form-control" id="donor-name" name="donor_name" />
+                 <input placeholder="<?php echo __( 'Name' )?>" type="text" class="form-control" id="donor-name" name="donor_name" required oninvalid="this.setCustomValidity('Vul a.u.b. een naam in. Een pseudoniem mag ook ;-)')"
+                 oninput="setCustomValidity('')" />
               </div>
            </div>
            <div class="form-row">
               <div class="form-group col-md-8">
-              <input type="number" min="0.0" step=".01" placeholder="0" class="form-control" id="donation-amount" name="donation_amount" />
+              <input type="number" min="1" step="1" placeholder="1" class="form-control" id="donation-amount" name="donation_amount" required oninvalid="this.setCustomValidity('Vul a.u.b. rond getal groter dan 1 in')"
+              oninput="setCustomValidity('')" />
               </div>
               <div class="form-group col-md-4">
                  <select id="donor-currency" class="form-control" name="donor_currency">
@@ -205,12 +207,12 @@ function lnc_btcdonate_shortcode()
            </div>
            <div class="form-row">
               <div class="form-group col-md-12">
-                 <textarea id="donor-comment" placeholder="Comment..." class="form-control" name="donor_comment" maxlength="250"></textarea>
+                 <textarea id="donor-comment" placeholder="<?php echo __( 'Comment' )?>" class="form-control" name="donor_comment" maxlength="250"></textarea>
               </div>
            </div>
            <div class="form-row">
               <div class="form-group col-md-12">
-                 <button type="submit" name="submit" class="btn btn-primary">Donate!</button>
+                 <button type="submit" name="submit" class="breakdance-link button-atom button-atom--primary bde-button__button btn btn-primary"><?php echo __( 'Donate' )?>!</button>
               </div>
            </div>
         </form>
