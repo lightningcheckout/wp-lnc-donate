@@ -48,7 +48,7 @@ function lnc_btcdonate_render_custom_metabox($post) {
     // Output the HTML for your custom fields
     ?>
     <label for="lnc_btcdonate_payment_hash">Payment Hash:</label>
-    <input type="text" id="lnc_btcdonate_payment_hash" size="75" name="lnc_btcdonate_payment_hash" value="<?php echo esc_attr($payment_hash); ?> " disabled />
+    <input type="text" id="lnc_btcdonate_payment_hash" size="75" name="lnc_btcdonate_payment_hash" value="<?php echo esc_attr($payment_hash); ?>" disabled />
     <?php
 }
 
@@ -76,7 +76,7 @@ function manage_donation_columns( $column, $post_id ) {
 			if ( empty( $payment_hash ) )
 				echo __( '' );
 			else
-				printf( $payment_hash );
+				echo esc_html( $payment_hash );
 			break;
 	}
 }

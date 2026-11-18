@@ -23,7 +23,7 @@ add_action("wp_head", "lnc_btcdonate_user_styles");
 function lnc_btcdonate_enqueue_styles()
 {
     // Enqueue Bootstrap stylesheet
-    wp_enqueue_style("bootstrap", "https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css");
+    wp_enqueue_style("bootstrap", "https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css", array(), "4.6.2");
     // Enqueue your plugin stylesheet
     wp_enqueue_style( "lightningcheckout-style", plugins_url("lightningcheckout-donate-style.css", __FILE__));
 }
