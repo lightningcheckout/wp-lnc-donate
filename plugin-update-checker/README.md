@@ -29,7 +29,7 @@ From the users' perspective, it works just like with plugins and themes hosted o
 Getting Started
 ---------------
 
-*Note:* In each of the below examples, part of the instructions are to create an instance of the update checker class. It's recommended to do this either during the `plugins_loaded` action or outside of any hooks. If you do it only during an `admin_*` action, then updates will not be visible to a wide variety of WordPress maanagement tools; they will only be visible to logged-in users on dashboard pages.
+*Note:* In each of the below examples, part of the instructions is to create an instance of the update checker class. It's recommended to do this either during the `plugins_loaded` action or outside of any hooks. If you do it only during an `admin_*` action, then updates will not be visible to a wide variety of WordPress management tools; they will only be visible to logged-in users on dashboard pages.
 
 ### Self-hosted Plugins and Themes
 
@@ -65,7 +65,7 @@ Getting Started
 
 	```php
 	require 'path/to/plugin-update-checker/plugin-update-checker.php';
-	use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
+	use YahnisElsts\PluginUpdateChecker\v6\PucFactory;
  
 	$myUpdateChecker = PucFactory::buildUpdateChecker(
 		'https://example.com/path/to/details.json',
@@ -99,7 +99,7 @@ By default, the library will check the specified URL for changes every 12 hours.
 
 	```php
 	require 'plugin-update-checker/plugin-update-checker.php';
-	use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
+	use YahnisElsts\PluginUpdateChecker\v6\PucFactory;
  
 	$myUpdateChecker = PucFactory::buildUpdateChecker(
 		'https://github.com/user-name/repo-name/',
@@ -127,6 +127,11 @@ This library supports a couple of different ways to release updates on GitHub. P
 	```php
 	$myUpdateChecker->getVcsApi()->enableReleaseAssets();
 	```
+	
+ 	By default, PUC will simply use the first available asset. You can pass a regular expression to `enableReleaseAssets()` to filter assets by name. For example:
+	```php
+	$myUpdateChecker->getVcsApi()->enableReleaseAssets('/\.zip($|[?&#])/i');
+ 	```
 	
 - **Tags** 
 	
@@ -180,7 +185,7 @@ The library will pull update details from the following parts of a release/tag/b
 
 	```php
 	require 'plugin-update-checker/plugin-update-checker.php';
-	use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
+	use YahnisElsts\PluginUpdateChecker\v6\PucFactory;
  
 	$myUpdateChecker = PucFactory::buildUpdateChecker(
 		'https://bitbucket.org/user-name/repo-name',
@@ -188,14 +193,12 @@ The library will pull update details from the following parts of a release/tag/b
 		'unique-plugin-or-theme-slug'
 	);
 
-	//Optional: If you're using a private repository, create an OAuth consumer
-	//and set the authentication credentials like this:
-	//Note: For now you need to check "This is a private consumer" when
-	//creating the consumer to work around #134:
-	// https://github.com/YahnisElsts/plugin-update-checker/issues/134
+	//Optional: If you're using a private repository, create an API token
+	//with the "read:repository:bitbucket" scope and set the authentication
+	//credentials like this:
 	$myUpdateChecker->setAuthentication(array(
-		'consumer_key' => '...',
-		'consumer_secret' => '...',
+		'username'  => 'example@example.com', //Your BitBucket email address.
+		'api_token' => '...',
 	));
 
 	//Optional: Set the branch that contains the stable release.
@@ -238,7 +241,7 @@ BitBucket doesn't have an equivalent to GitHub's releases, so the process is sli
 
 	```php
 	require 'plugin-update-checker/plugin-update-checker.php';
-	use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
+	use YahnisElsts\PluginUpdateChecker\v6\PucFactory;
 
 	$myUpdateChecker = PucFactory::buildUpdateChecker(
 		'https://gitlab.com/user-name/repo-name/',
@@ -252,8 +255,8 @@ BitBucket doesn't have an equivalent to GitHub's releases, so the process is sli
 
 	Alternatively, if you're using a self-hosted GitLab instance, initialize the update checker like this:
 	```php
-	use YahnisElsts\PluginUpdateChecker\v5p1\Vcs\PluginUpdateChecker;
-	use YahnisElsts\PluginUpdateChecker\v5p1\Vcs\GitLabApi;
+	use YahnisElsts\PluginUpdateChecker\v6p0\Vcs\PluginUpdateChecker;
+	use YahnisElsts\PluginUpdateChecker\v6p0\Vcs\GitLabApi;
 	
 	$myUpdateChecker = new PluginUpdateChecker(
 		new GitLabApi('https://myserver.com/user-name/repo-name/'),
@@ -264,8 +267,8 @@ BitBucket doesn't have an equivalent to GitHub's releases, so the process is sli
 	```
 	If you're using a self-hosted GitLab instance and [subgroups or nested groups](https://docs.gitlab.com/ce/user/group/subgroups/index.html), you have to tell the update checker which parts of the URL are subgroups:
 	```php
-	use YahnisElsts\PluginUpdateChecker\v5p1\Vcs\PluginUpdateChecker;
-	use YahnisElsts\PluginUpdateChecker\v5p1\Vcs\GitLabApi;
+	use YahnisElsts\PluginUpdateChecker\v6p0\Vcs\PluginUpdateChecker;
+	use YahnisElsts\PluginUpdateChecker\v6p0\Vcs\GitLabApi;
    
 	$myUpdateChecker = new PluginUpdateChecker(
 		new GitLabApi(
@@ -333,7 +336,7 @@ $myUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
 
 New code:
 ```php
-use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
+use YahnisElsts\PluginUpdateChecker\v6\PucFactory;
 
 $myUpdateChecker = PucFactory::buildUpdateChecker(
 	'https://example.com/info.json',
@@ -346,15 +349,15 @@ Other classes have also been renamed, usually by simply removing the `Puc_vXpY_`
 
 | Old class name                      | New class name                                                 |
 |-------------------------------------|----------------------------------------------------------------|
-| `Puc_v4_Factory`                    | `YahnisElsts\PluginUpdateChecker\v5\PucFactory`                |
-| `Puc_v4p13_Factory`                 | `YahnisElsts\PluginUpdateChecker\v5p1\PucFactory`              |
-| `Puc_v4p13_Plugin_UpdateChecker`    | `YahnisElsts\PluginUpdateChecker\v5p1\Plugin\UpdateChecker`    |
-| `Puc_v4p13_Theme_UpdateChecker`     | `YahnisElsts\PluginUpdateChecker\v5p1\Theme\UpdateChecker`     |
-| `Puc_v4p13_Vcs_PluginUpdateChecker` | `YahnisElsts\PluginUpdateChecker\v5p1\Vcs\PluginUpdateChecker` |
-| `Puc_v4p13_Vcs_ThemeUpdateChecker`  | `YahnisElsts\PluginUpdateChecker\v5p1\Vcs\ThemeUpdateChecker`  |
-| `Puc_v4p13_Vcs_GitHubApi`           | `YahnisElsts\PluginUpdateChecker\v5p1\Vcs\GitHubApi`           |
-| `Puc_v4p13_Vcs_GitLabApi`           | `YahnisElsts\PluginUpdateChecker\v5p1\Vcs\GitLabApi`           |
-| `Puc_v4p13_Vcs_BitBucketApi`        | `YahnisElsts\PluginUpdateChecker\v5p1\Vcs\BitBucketApi`        |
+| `Puc_v4_Factory`                    | `YahnisElsts\PluginUpdateChecker\v6\PucFactory`                |
+| `Puc_v4p13_Factory`                 | `YahnisElsts\PluginUpdateChecker\v6p0\PucFactory`              |
+| `Puc_v4p13_Plugin_UpdateChecker`    | `YahnisElsts\PluginUpdateChecker\v6p0\Plugin\UpdateChecker`    |
+| `Puc_v4p13_Theme_UpdateChecker`     | `YahnisElsts\PluginUpdateChecker\v6p0\Theme\UpdateChecker`     |
+| `Puc_v4p13_Vcs_PluginUpdateChecker` | `YahnisElsts\PluginUpdateChecker\v6p0\Vcs\PluginUpdateChecker` |
+| `Puc_v4p13_Vcs_ThemeUpdateChecker`  | `YahnisElsts\PluginUpdateChecker\v6p0\Vcs\ThemeUpdateChecker`  |
+| `Puc_v4p13_Vcs_GitHubApi`           | `YahnisElsts\PluginUpdateChecker\v6p0\Vcs\GitHubApi`           |
+| `Puc_v4p13_Vcs_GitLabApi`           | `YahnisElsts\PluginUpdateChecker\v6p0\Vcs\GitLabApi`           |
+| `Puc_v4p13_Vcs_BitBucketApi`        | `YahnisElsts\PluginUpdateChecker\v6p0\Vcs\BitBucketApi`        |
 
 License Management
 ------------------

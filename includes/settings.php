@@ -2,9 +2,15 @@
 // Register Settings
 function lnc_btcdonate_register_settings()
 {
-    register_setting("lnc_btcdonate_settings_group", "lnc_btcdonate_api_endpoint");
-    register_setting("lnc_btcdonate_settings_group","lnc_btcdonate_api_key");
-    register_setting("lnc_btcdonate_settings_group","lnc_btcdonate_api_wallet");
+    register_setting("lnc_btcdonate_settings_group", "lnc_btcdonate_api_endpoint", array(
+        'sanitize_callback' => 'esc_url_raw',
+    ));
+    register_setting("lnc_btcdonate_settings_group","lnc_btcdonate_api_key", array(
+        'sanitize_callback' => 'sanitize_text_field',
+    ));
+    register_setting("lnc_btcdonate_settings_group","lnc_btcdonate_api_wallet", array(
+        'sanitize_callback' => 'sanitize_text_field',
+    ));
     register_setting("lnc_btcdonate_settings_group", "lnc_btcdonate_api_createpost", array(
         'type' => 'boolean', // Ensure that the type is set to boolean
         'sanitize_callback' => 'sanitize_checkbox', // Add a sanitize callback for checkbox
@@ -36,19 +42,19 @@ function lnc_btcdonate_settings_section_callback()
 function lnc_btcdonate_api_endpoint_callback()
 {
     $endpoint = get_option("lnc_btcdonate_api_endpoint");
-    echo "<input type='text' name='lnc_btcdonate_api_endpoint' value='$endpoint' size='50' />";
+    echo "<input type='url' name='lnc_btcdonate_api_endpoint' value='" . esc_attr($endpoint) . "' size='50' />";
 }
 
 function lnc_btcdonate_api_key_callback()
 {
     $key = get_option("lnc_btcdonate_api_key");
-    echo "<input type='text' name='lnc_btcdonate_api_key' value='$key' size='50' />";
+    echo "<input type='password' autocomplete='off' name='lnc_btcdonate_api_key' value='" . esc_attr($key) . "' size='50' />";
 }
 
 function lnc_btcdonate_api_wallet_callback()
 {
     $wallet = get_option("lnc_btcdonate_api_wallet");
-    echo "<input type='text' name='lnc_btcdonate_api_wallet' value='$wallet' size='50' />";
+    echo "<input type='text' name='lnc_btcdonate_api_wallet' value='" . esc_attr($wallet) . "' size='50' />";
 }
 
 function lnc_btcdonate_api_createpost_callback()
@@ -96,7 +102,7 @@ function lnc_btcdonate_sanitize_currency_options($input)
     $valid_currencies = lnc_btcdonate_get_currency_list();
 
     // Convert the input to an array, Filter out invalid currencies, Convert back to a comma-separated string
-    $input_array = explode(",", $input);
+    $input_array = array_map("trim", explode(",", strtoupper((string) $input)));
     $sanitized_input = array_intersect($input_array, array_keys($valid_currencies));
     $sanitized_input_string = implode(",", $sanitized_input);
     return $sanitized_input_string;

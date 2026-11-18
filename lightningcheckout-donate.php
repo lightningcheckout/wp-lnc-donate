@@ -3,11 +3,12 @@
 Plugin Name: Lightning Checkout - Bitcoin Donate
 Description: Accept Bitcoin Donations on your Wordpress website.
 Version: 0.5
+Requires PHP: 7.4
 Author: Lightning Checkout
 */
 
 require 'plugin-update-checker/plugin-update-checker.php';
-use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
+use YahnisElsts\PluginUpdateChecker\v6\PucFactory;
 
 $myUpdateChecker = PucFactory::buildUpdateChecker(
 	'https://github.com/lightningcheckout/wp-lnc-donate/',

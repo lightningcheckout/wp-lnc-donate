@@ -30,17 +30,41 @@ function lnc_btcdonate_shortcode()
         $site_name = get_bloginfo("name");
         $base_url = home_url();
         $redirect_url =
-            add_query_arg("", "", $base_url . $_SERVER["REQUEST_URI"]) .
-            "?donated=true#donateform";
+            add_query_arg(
+                "donated",
+                "true",
+                $base_url . esc_url_raw(wp_unslash($_SERVER["REQUEST_URI"]))
+            ) . "#donateform";
 
         // Retrieve form data
-        $donation_amount = sanitize_text_field($_POST["donation_amount"]);
-        $donor_name = sanitize_text_field($_POST["donor_name"]);
-        $donor_comment = esc_html($_POST["donor_comment"]);
-        $selected_currency = sanitize_text_field($_POST["donor_currency"]);
+        $donation_amount = sanitize_text_field(wp_unslash($_POST["donation_amount"] ?? ""));
+        $donor_name = sanitize_text_field(wp_unslash($_POST["donor_name"] ?? ""));
+        $donor_comment = esc_html(
+            mb_substr(sanitize_textarea_field(wp_unslash($_POST["donor_comment"] ?? "")), 0, 250)
+        );
+        $selected_currency = sanitize_text_field(wp_unslash($_POST["donor_currency"] ?? ""));
+
+        // Only accept currencies that the admin has enabled
+        $allowed_currencies = array_map(
+            "trim",
+            explode(",", (string) get_option("lnc_btcdonate_currency_options"))
+        );
+        if (!in_array($selected_currency, $allowed_currencies, true)) {
+            $selected_currency = "";
+        }
+
+        // Only accept a positive numeric amount
+        if (!is_numeric($donation_amount) || floatval($donation_amount) <= 0 || $selected_currency === "") {
+            echo '<div id="donateform"><b>' . esc_html__("Please enter a valid amount.") . "</b></div>";
+            $donation_amount = null;
+        }
+
+        $amount_sats = 0;
 
         // Convert amount to sat if not sat
-        if ($selected_currency == "SAT") {
+        if ($donation_amount === null) {
+            // Invalid input, skip API calls
+        } elseif ($selected_currency == "SAT") {
             $amount_sats = intval($donation_amount);
         } else {
             $conversion_api_data = [
@@ -67,100 +91,98 @@ function lnc_btcdonate_shortcode()
                 // API call was successful
                 $api_body = wp_remote_retrieve_body($api_response);
                 $decoded_response = json_decode($api_body);
-                if ($decoded_response !== null) {
-                    $amount_sats = $decoded_response->sats;
-                    error_log($amount_sats);
+                if ($decoded_response !== null && isset($decoded_response->sats)) {
+                    $amount_sats = intval($decoded_response->sats);
                 }
             }
         }
 
         // Set donation title once amount sats is known
-        if (strlen($donor_name) > 2) {
-            $donar_title = $donor_name . " (" . $amount_sats . " sats)";
-        } else {
-            $donar_title = "Anonymous (" . $amount_sats . " sats)";
-        }
+        if ($amount_sats > 0) {
+            if (strlen($donor_name) > 2) {
+                $donar_title = $donor_name . " (" . $amount_sats . " sats)";
+            } else {
+                $donar_title = "Anonymous (" . $amount_sats . " sats)";
+            }
 
-        // Create payments
-        $charge_api_data = [
-            "lnbitswallet" => $api_lnwallet,
-            "description" => "Donation " . $site_name,
-            "completelink" => $redirect_url,
-            "completelinktext" => "Thanks, go back to " . $site_name,
-            "time" => 1440,
-            "amount" => $amount_sats,
-            "extra" =>
-                '{"mempool_endpoint": "https://mempool.space", "network": "Mainnet", "misc": {"lnc_product": "BTCDONATE"}}',
-        ];
+            // Create payments
+            $charge_api_data = [
+                "lnbitswallet" => $api_lnwallet,
+                "description" => "Donation " . $site_name,
+                "completelink" => $redirect_url,
+                "completelinktext" => "Thanks, go back to " . $site_name,
+                "time" => 1440,
+                "amount" => $amount_sats,
+                "extra" =>
+                    '{"mempool_endpoint": "https://mempool.space", "network": "Mainnet", "misc": {"lnc_product": "BTCDONATE"}}',
+            ];
 
-        // If a post is needed, the webhook is as well, so add to charge data.
-        if ($api_createpost) {
-            $charge_api_data["webhook"] =
-                $base_url . "/wp-json/lightningcheckout-donate/v1/webhook";
-        }
+            // If a post is needed, the webhook is as well, so add to charge data.
+            if ($api_createpost) {
+                $charge_api_data["webhook"] =
+                    $base_url . "/wp-json/lightningcheckout-donate/v1/webhook";
+            }
 
-        // Make API call
-        $charge_api_response = wp_remote_post(
-            $api_endpoint . "/satspay/api/v1/charge",
-            [
-                "body" => json_encode($charge_api_data),
-                "headers" => [
-                    "Content-Type" => "application/json",
-                    "X-API-KEY" => $api_key,
-                ],
-            ]
-        );
-        if (is_wp_error($charge_api_response)) {
-            error_log(
-                "API Error: " . $charge_api_response->get_error_message()
+            // Make API call
+            $charge_api_response = wp_remote_post(
+                $api_endpoint . "/satspay/api/v1/charge",
+                [
+                    "body" => json_encode($charge_api_data),
+                    "headers" => [
+                        "Content-Type" => "application/json",
+                        "X-API-KEY" => $api_key,
+                    ],
+                ]
             );
-        } else {
-            // API call was successful
-            $charge_api_body = wp_remote_retrieve_body($charge_api_response);
-            $decoded_charge_response = json_decode($charge_api_body);
-            if ($decoded_charge_response !== null) {
-                $charge_id = $decoded_charge_response->id;
+            if (is_wp_error($charge_api_response)) {
                 error_log(
-                    "Payment hash to process: " .
-                        $decoded_charge_response->payment_hash
+                    "API Error: " . $charge_api_response->get_error_message()
                 );
-                if ($api_createpost) {
-                    // Create post in concept
-                    $post_data = [
-                        "post_title" => $donar_title,
-                        "post_content" => $donor_comment,
-                        "post_type" => "donation",
-                        "post_status" => "draft",
-                    ];
-
-                    // Insert the post and Save payment hash as post meta
-                    $post_id = wp_insert_post($post_data);
-                    if (!is_wp_error($post_id)) {
-                        error_log(
-                            "Payment processing: " .
-                                $decoded_charge_response->payment_hash
-                        );
-                        update_post_meta(
-                            $post_id,
-                            "_payment_hash",
+            } else {
+                // API call was successful
+                $charge_api_body = wp_remote_retrieve_body($charge_api_response);
+                $decoded_charge_response = json_decode($charge_api_body);
+                if ($decoded_charge_response !== null && isset($decoded_charge_response->id)) {
+                    $charge_id = rawurlencode((string) $decoded_charge_response->id);
+                    error_log(
+                        "Payment hash to process: " .
                             $decoded_charge_response->payment_hash
-                        );
+                    );
+                    if ($api_createpost) {
+                        // Create post in concept
+                        $post_data = [
+                            "post_title" => $donar_title,
+                            "post_content" => $donor_comment,
+                            "post_type" => "donation",
+                            "post_status" => "draft",
+                        ];
+
+                        // Insert the post and Save payment hash as post meta
+                        $post_id = wp_insert_post($post_data);
+                        if (!is_wp_error($post_id)) {
+                            error_log(
+                                "Payment processing: " .
+                                    $decoded_charge_response->payment_hash
+                            );
+                            update_post_meta(
+                                $post_id,
+                                "_payment_hash",
+                                $decoded_charge_response->payment_hash
+                            );
+                        }
+                    }
+
+                    $checkout_url = esc_url_raw($api_endpoint . "/satspay/" . $charge_id);
+                    if (headers_sent()) {
+                        echo "<script>window.location = " . wp_json_encode($checkout_url) . ";</script>";
+                    } else {
+                        wp_redirect($checkout_url);
+                        exit();
                     }
                 }
-
-                if (headers_sent()) {
-                    $redirect =
-                        "<script>window.location = '" .
-                        $api_endpoint .
-                        "/satspay/" .
-                        $charge_id .
-                        "';</script>";
-                    echo $redirect;
-                } else {
-                    wp_redirect($api_endpoint . "/satspay/" . $charge_id);
-                    exit();
-                }
             }
+        } elseif ($donation_amount !== null) {
+            echo '<div id="donateform"><b>' . esc_html__("Could not create the payment, please try again later.") . "</b></div>";
         }
     }
 
